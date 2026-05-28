@@ -1,0 +1,1832 @@
+<!doctype html>
+<!-- Current version: v2.3 | 27.05.2026, 14:30 CET -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vaillant — Copilot Live Demo (Mon 11:30, Cologne)</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("clawpilotTheme");
+      const theme = param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-accent: #b11f4b;
+      --cp-accent-hover: #9a1a41;
+      --cp-accent-soft: rgba(177, 31, 75, 0.08);
+      --cp-accent-fg: #ffffff;
+      --cp-link: #0078d4;
+
+      /* Demo block accents */
+      --cp-multimodel: #0078d4;            /* Blue — model choice */
+      --cp-multimodel-soft: rgba(0, 120, 212, 0.10);
+      --cp-multimodel-bg: #e8f3fc;
+      --cp-multiagent: #6b21a8;            /* Purple — agents in chat */
+      --cp-multiagent-soft: rgba(107, 33, 168, 0.10);
+      --cp-multiagent-bg: #f3e8ff;
+      --cp-cowork: #d97706;                /* Gold — Cowork long-running */
+      --cp-cowork-soft: rgba(217, 119, 6, 0.10);
+      --cp-cowork-bg: #fff4e0;
+      --cp-future: #16a34a;                /* Green — outlook / Lobster */
+      --cp-future-soft: rgba(22, 163, 74, 0.10);
+      --cp-future-bg: #e8f7ee;
+      --cp-ok: #16a34a;
+      --cp-ok-soft: rgba(22, 163, 74, 0.10);
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #1c1b1a;
+      --cp-bg-elevated: #252423;
+      --cp-surface: #2d2c2b;
+      --cp-surface-soft: #333231;
+      --cp-border: #404040;
+      --cp-text: #ededed;
+      --cp-text-muted: #b0b0b0;
+      --cp-accent: #fd8ea1;
+      --cp-accent-hover: #fb7b91;
+      --cp-accent-soft: rgba(253, 142, 161, 0.14);
+      --cp-accent-fg: #1a1a1a;
+      --cp-link: #4da6ff;
+
+      --cp-multimodel: #4da6ff;
+      --cp-multimodel-soft: rgba(77, 166, 255, 0.16);
+      --cp-multimodel-bg: rgba(77, 166, 255, 0.08);
+      --cp-multiagent: #c084fc;
+      --cp-multiagent-soft: rgba(192, 132, 252, 0.16);
+      --cp-multiagent-bg: rgba(192, 132, 252, 0.08);
+      --cp-cowork: #fbbf24;
+      --cp-cowork-soft: rgba(251, 191, 36, 0.16);
+      --cp-cowork-bg: rgba(251, 191, 36, 0.08);
+      --cp-future: #4ade80;
+      --cp-future-soft: rgba(74, 222, 128, 0.16);
+      --cp-future-bg: rgba(74, 222, 128, 0.08);
+      --cp-ok: #4ade80;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--cp-bg);
+      color: var(--cp-text);
+      font-family: "Segoe UI Variable", "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    button { font: inherit; }
+    a { color: var(--cp-link); }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    aside {
+      background: var(--cp-bg-elevated);
+      border-right: 1px solid var(--cp-border);
+      height: 100vh;
+      padding: 20px;
+      position: sticky;
+      top: 0;
+      overflow-y: auto;
+    }
+    .brand-mark {
+      color: var(--cp-accent);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+    aside h2 {
+      font-size: 18px;
+      margin: 6px 0 16px;
+      letter-spacing: -0.02em;
+    }
+    .version-badge {
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 8px;
+      color: var(--cp-text-muted);
+      display: block;
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      margin-bottom: 14px;
+      padding: 7px 10px;
+    }
+    .version-badge .version-number {
+      color: var(--cp-accent);
+      font-weight: 800;
+      letter-spacing: 0.06em;
+    }
+    nav { display: grid; gap: 6px; }
+    nav a {
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 8px;
+      color: var(--cp-text);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 11px;
+      text-decoration: none;
+    }
+    nav a.mm { border-left: 3px solid var(--cp-multimodel); }
+    nav a.ma { border-left: 3px solid var(--cp-multiagent); }
+    nav a.cw { border-left: 3px solid var(--cp-cowork); }
+    nav a.ft { border-left: 3px solid var(--cp-future); }
+    nav a:hover { background: var(--cp-surface-soft); }
+    nav .nav-section {
+      color: var(--cp-text-muted);
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      margin: 14px 0 4px;
+      padding-left: 4px;
+      text-transform: uppercase;
+    }
+
+    .ctrl {
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 8px;
+      color: var(--cp-text);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: 8px;
+      padding: 9px 11px;
+      text-align: left;
+      width: 100%;
+    }
+    .ctrl:hover { background: var(--cp-surface-soft); }
+
+    main {
+      padding: 36px 44px 80px;
+      max-width: 1120px;
+    }
+    section {
+      border-bottom: 1px solid var(--cp-border);
+      padding: 32px 0;
+    }
+    section:first-child { padding-top: 0; }
+    h1 {
+      font-size: clamp(38px, 6vw, 60px);
+      letter-spacing: -0.045em;
+      line-height: 1;
+      margin: 4px 0 0;
+    }
+    h2 {
+      font-size: clamp(26px, 3.5vw, 36px);
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      margin: 0;
+    }
+    h3 {
+      font-size: 17px;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+      margin: 0;
+    }
+    p { margin: 0 0 12px; max-width: 78ch; }
+    .subtitle {
+      color: var(--cp-text-muted);
+      font-size: clamp(16px, 1.6vw, 19px);
+      line-height: 1.4;
+      margin-top: 14px;
+      max-width: 90ch;
+    }
+    .eyebrow {
+      color: var(--cp-text-muted);
+      font-size: 11.5px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    /* Hero meta-strip */
+    .meta-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin: 20px 0 0;
+    }
+    .meta-chip {
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 10px;
+      padding: 10px 14px;
+    }
+    .meta-chip .label {
+      color: var(--cp-text-muted);
+      display: block;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .meta-chip .value {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    /* Demo block badges */
+    .block-badge {
+      border-radius: 999px;
+      display: inline-block;
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      padding: 4px 10px;
+      text-transform: uppercase;
+      margin-right: 8px;
+    }
+    .b-mm { background: var(--cp-multimodel-soft); color: var(--cp-multimodel); }
+    .b-ma { background: var(--cp-multiagent-soft); color: var(--cp-multiagent); }
+    .b-cw { background: var(--cp-cowork-soft); color: var(--cp-cowork); }
+    .b-ft { background: var(--cp-future-soft); color: var(--cp-future); }
+
+    /* Card grids */
+    .grid {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px;
+    }
+    .grid.two { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+    .grid.three { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+
+    .card {
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 12px;
+      padding: 18px 18px 16px;
+    }
+    .card[data-block="mm"] { border-left: 4px solid var(--cp-multimodel); }
+    .card[data-block="ma"] { border-left: 4px solid var(--cp-multiagent); }
+    .card[data-block="cw"] { border-left: 4px solid var(--cp-cowork); }
+    .card[data-block="ft"] { border-left: 4px solid var(--cp-future); }
+    .card h3 { margin-bottom: 6px; }
+    .card p { font-size: 13.5px; }
+    .card ul {
+      font-size: 13.5px;
+      margin: 6px 0 0;
+      padding-left: 18px;
+    }
+    .card ul li { margin: 3px 0; }
+
+    /* Banners */
+    .banner {
+      align-items: center;
+      background: var(--cp-multimodel-bg);
+      border-left: 6px solid var(--cp-multimodel);
+      border-radius: 0 10px 10px 0;
+      display: flex;
+      gap: 14px;
+      margin: 22px 0 10px;
+      padding: 14px 18px;
+    }
+    .banner.ma { background: var(--cp-multiagent-bg); border-left-color: var(--cp-multiagent); }
+    .banner.cw { background: var(--cp-cowork-bg); border-left-color: var(--cp-cowork); }
+    .banner.ft { background: var(--cp-future-bg); border-left-color: var(--cp-future); }
+    .banner .icon { font-size: 22px; line-height: 1; }
+    .banner h3 { font-size: 17px; margin: 0; }
+    .banner p { color: var(--cp-text-muted); font-size: 12.5px; margin: 2px 0 0; }
+
+    /* Prompt cards */
+    .prompt-card {
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-left: 4px solid var(--cp-multimodel);
+      border-radius: 12px;
+      margin: 14px 0;
+      padding: 18px;
+    }
+    .prompt-card[data-block="ma"] { border-left-color: var(--cp-multiagent); }
+    .prompt-card[data-block="cw"] { border-left-color: var(--cp-cowork); }
+    .prompt-card[data-block="ft"] { border-left-color: var(--cp-future); }
+    .prompt-head {
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .prompt-meta {
+      color: var(--cp-text-muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+    .audience-line {
+      background: var(--cp-multimodel-soft);
+      border-radius: 6px;
+      font-size: 13px;
+      font-style: italic;
+      margin: 10px 0;
+      padding: 8px 12px;
+    }
+    .prompt-card[data-block="ma"] .audience-line { background: var(--cp-multiagent-soft); }
+    .prompt-card[data-block="cw"] .audience-line { background: var(--cp-cowork-soft); }
+    .prompt-card[data-block="ft"] .audience-line { background: var(--cp-future-soft); }
+    pre {
+      background: var(--cp-surface-soft);
+      border: 1px solid var(--cp-border);
+      border-radius: 8px;
+      color: var(--cp-text);
+      font-family: "Cascadia Mono", Consolas, "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      margin: 0;
+      overflow: auto;
+      padding: 12px 14px;
+      white-space: pre-wrap;
+    }
+    .copy {
+      background: var(--cp-accent);
+      border: 1px solid var(--cp-accent);
+      border-radius: 8px;
+      color: var(--cp-accent-fg);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 7px 12px;
+      white-space: nowrap;
+    }
+    .copy:hover { background: var(--cp-accent-hover); }
+    .file-hint {
+      color: var(--cp-text-muted);
+      font-size: 12px;
+      margin: 8px 0 4px;
+    }
+    .file-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 10px 0 4px;
+    }
+    .file-tag {
+      align-items: center;
+      background: var(--cp-surface-soft);
+      border: 1px solid var(--cp-border);
+      border-radius: 999px;
+      color: var(--cp-text);
+      display: inline-flex;
+      font-size: 12px;
+      gap: 6px;
+      padding: 4px 10px 4px 6px;
+      text-decoration: none;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .file-tag:hover {
+      background: var(--cp-surface);
+      border-color: var(--cp-accent);
+    }
+    .file-tag .file-icon {
+      align-items: center;
+      border-radius: 4px;
+      color: #fff;
+      display: inline-flex;
+      font-size: 10px;
+      font-weight: 700;
+      height: 18px;
+      justify-content: center;
+      letter-spacing: 0.3px;
+      width: 22px;
+    }
+    .file-tag .file-icon.xlsx { background: #107c41; }
+    .file-tag .file-icon.docx { background: #2b579a; }
+    .file-tag .file-icon.pptx { background: #b7472a; }
+    .file-tag .file-icon.txt  { background: #6b7280; }
+    .file-tag .file-icon.csv  { background: #0f766e; }
+    .file-tag .file-name { font-weight: 600; }
+    .file-tag .file-dl {
+      color: var(--cp-text-muted);
+      font-size: 11px;
+      margin-left: 2px;
+      opacity: 0.85;
+    }
+    .file-tag:hover .file-dl { color: var(--cp-accent); opacity: 1; }
+
+    .customer-brief {
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 12px;
+      padding: 0;
+    }
+    .customer-brief > summary {
+      align-items: center;
+      cursor: pointer;
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      list-style: none;
+      padding: 18px 22px;
+      user-select: none;
+    }
+    .customer-brief > summary::-webkit-details-marker { display: none; }
+    .customer-brief > summary::after {
+      content: "▾";
+      color: var(--cp-text-muted);
+      font-size: 18px;
+      transition: transform 0.2s ease;
+    }
+    .customer-brief[open] > summary::after { transform: rotate(180deg); }
+    .customer-brief[open] > summary { border-bottom: 1px solid var(--cp-border); }
+    .customer-brief .cb-toggle {
+      color: var(--cp-text-muted);
+      font-size: 12px;
+      font-weight: 400;
+      margin-left: 8px;
+    }
+    .customer-brief[open] .cb-toggle::before { content: "click to collapse"; }
+    .customer-brief[open] .cb-toggle { font-size: 0; }
+    .customer-brief[open] .cb-toggle::before { font-size: 12px; }
+    .customer-brief > .subtitle,
+    .customer-brief > .grid,
+    .customer-brief > .banner,
+    .customer-brief > .source-note { margin-left: 22px; margin-right: 22px; }
+    .customer-brief > .subtitle { margin-top: 16px; }
+    .customer-brief > .source-note { padding-bottom: 22px; }
+
+    .checklist { list-style: none; padding: 0; margin: 14px 0 0; }
+    .checklist li {
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 8px;
+      margin-bottom: 6px;
+      padding: 9px 12px;
+      font-size: 13.5px;
+    }
+    .checklist li::before {
+      color: var(--cp-ok);
+      content: "✓ ";
+      font-weight: 800;
+    }
+
+    .timing {
+      list-style: none;
+      padding: 0;
+      margin: 14px 0 0;
+    }
+    .timing li {
+      align-items: baseline;
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 110px 1fr;
+      padding: 8px 0;
+      border-bottom: 1px dashed var(--cp-border);
+    }
+    .timing li:last-child { border: none; }
+    .timing .when {
+      color: var(--cp-accent);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+    .timing .what { font-size: 14px; }
+    .timing .what .muted { color: var(--cp-text-muted); font-size: 12.5px; display: block; }
+
+    .source-note {
+      color: var(--cp-text-muted);
+      font-size: 11.5px;
+      margin-top: 8px;
+    }
+    .source-note a { color: var(--cp-text-muted); text-decoration: underline; }
+
+    .vs {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: 1fr 1fr;
+      margin-top: 18px;
+    }
+    .vs > div {
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .vs .copilot { border-left: 4px solid var(--cp-multimodel); }
+    .vs .foundry { border-left: 4px solid var(--cp-cowork); }
+    .vs h3 { margin-bottom: 8px; }
+    .vs ul { padding-left: 18px; margin: 0; font-size: 13.5px; }
+    .vs ul li { margin: 4px 0; }
+
+    table {
+      border-collapse: collapse;
+      font-size: 13.5px;
+      margin-top: 14px;
+      width: 100%;
+    }
+    th, td {
+      border-bottom: 1px solid var(--cp-border);
+      padding: 9px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: var(--cp-surface-soft);
+      color: var(--cp-text);
+      font-size: 11.5px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside>
+    <div class="brand-mark">Vaillant × Microsoft</div>
+    <h2>Copilot Live<br>Demo Runbook</h2>
+
+    <div class="version-badge">
+      <span class="version-number">v2.3</span>
+      &nbsp;·&nbsp; 27.05.2026, 14:30 CET
+    </div>
+
+    <button id="theme" class="ctrl" type="button">🌓 Toggle theme</button>
+
+    <div class="nav-section">Context</div>
+    <nav>
+      <a href="#hero">Session at a glance</a>
+      <a href="#story">Story arc</a>
+      <a href="#customer">Customer briefing</a>
+      <a href="#setup">Setup checklist</a>
+      <a href="#timing">Timing (60 min)</a>
+    </nav>
+
+    <div class="nav-section">Live demos</div>
+    <nav>
+      <a class="ft" href="#workiq">0 · Work IQ (daily wins)</a>
+      <a class="mm" href="#mm">1 · Multi-Model Choice</a>
+      <a class="ma" href="#ma">2 · Many Agents, One Chat</a>
+      <a class="ma" href="#analyst">2b · Analyst Agent (data)</a>
+      <a class="cw" href="#cw">3 · Cowork + Skill</a>
+    </nav>
+
+    <div class="nav-section">In-app demos</div>
+    <nav>
+      <a class="ft" href="#excel">Excel — analyze &amp; visualize</a>
+      <a class="ft" href="#word">Word — draft to brief</a>
+      <a class="ft" href="#pptx">PowerPoint — instant deck</a>
+    </nav>
+
+    <div class="nav-section">Teams agents</div>
+    <nav>
+      <a class="ma" href="#facilitator">Facilitator agent</a>
+      <a class="ma" href="#interpreter">Interpreter agent</a>
+    </nav>
+
+    <div class="nav-section">Positioning</div>
+    <nav>
+      <a href="#vsfoundry">Copilot Studio vs Foundry</a>
+      <a href="#qa">Likely questions</a>
+    </nav>
+  </aside>
+
+  <main>
+    <section id="hero">
+      <div class="eyebrow">Monday 1 June 2026 · Microsoft Office Cologne</div>
+      <h1>Copilot is the UI for AI &mdash; live.</h1>
+      <p class="subtitle">
+        Vaillant is starting their Copilot journey after the summer break. The three guests
+        (Head of AI Strategy, Head of &ldquo;Vaillant GPT&rdquo;, AI operationalizer in IT) want to see &mdash;
+        not hear &mdash; that Copilot is more than chat. One UI, many models, many agents, increasingly long-running.
+      </p>
+      <div class="meta-strip">
+        <div class="meta-chip"><span class="label">Slot</span><span class="value">11:30 – 12:30 (60 min)</span></div>
+        <div class="meta-chip"><span class="label">Style</span><span class="value">Hands-on, live, low slides</span></div>
+        <div class="meta-chip"><span class="label">Audience</span><span class="value">3 × business / AI leads</span></div>
+        <div class="meta-chip"><span class="label">Focus area</span><span class="value">Copilot · adjacent to Foundry sessions</span></div>
+      </div>
+    </section>
+
+    <section id="story">
+      <div class="eyebrow">Story arc</div>
+      <h2>Three doors into &ldquo;more than chat&rdquo;</h2>
+      <p class="subtitle">
+        Every demo answers one of the questions the audience is already asking themselves.
+      </p>
+
+      <div class="grid three">
+        <div class="card" data-block="mm">
+          <span class="block-badge b-mm">Door 1</span>
+          <h3>Which model is the right one?</h3>
+          <p>They built &ldquo;Vaillant GPT&rdquo;. Now the world has GPT-5.5, Claude, Gemini, open models. Copilot makes that choice <em>visible and switchable</em>, even inside one conversation.</p>
+        </div>
+        <div class="card" data-block="ma">
+          <span class="block-badge b-ma">Door 2</span>
+          <h3>Where do agents actually live?</h3>
+          <p>In Copilot Chat: typing <code>@</code> brings in agents like a person joins a Teams call. The chat becomes the orchestration surface for the agents Vaillant will build (Foundry, Copilot Studio, others).</p>
+        </div>
+        <div class="card" data-block="cw">
+          <span class="block-badge b-cw">Door 3</span>
+          <h3>What happens when AI works for minutes, not seconds?</h3>
+          <p>Cowork takes a task, runs in the background, and produces a real artifact &mdash; with a reusable skill attached. Hand it off, keep talking, come back to a finished file.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="customer">
+      <details class="customer-brief">
+        <summary>
+          <div>
+            <div class="eyebrow">Customer briefing</div>
+            <h2 style="margin:0;">Vaillant Group &mdash; what you need to know walking in <span class="cb-toggle">click to expand</span></h2>
+          </div>
+        </summary>
+        <p class="subtitle">End-to-end view of the company across the four angles that matter for the conversation. All figures from <a href="https://www.vaillant-group.com/our-company/at-a-glance/" target="_blank" rel="noopener">Vaillant Group public website</a> and their corporate communications.</p>
+
+        <div class="grid two">
+          <div class="card" data-block="mm">
+            <span class="block-badge b-mm">Employees &amp; Revenue</span>
+            <h3>People and the P&amp;L</h3>
+            <ul>
+              <li><strong>~16,000 employees</strong> worldwide</li>
+              <li><strong>800+ in R&amp;D</strong> alone, 160+ R&amp;D projects running in parallel</li>
+              <li><strong>Multi-billion EUR revenue</strong> (specific figure published annually in the corporate fact book &mdash; reference the at-a-glance page above)</li>
+              <li><strong>100% family-owned</strong>, founded 1874 in Remscheid &mdash; celebrated 150 years in 2024</li>
+              <li>World market leader in central heating units</li>
+              <li>Note for the room: the people at the table sit on the digital/AI side of a company whose financials are watched <em>quarterly</em> by the owning family &mdash; not a public-shareholder dynamic</li>
+            </ul>
+          </div>
+
+          <div class="card" data-block="ma">
+            <span class="block-badge b-ma">International footprint</span>
+            <h3>Local roots, global operations</h3>
+            <ul>
+              <li><strong>Operations in 20+ countries</strong>, sales in <strong>60+ countries</strong></li>
+              <li><strong>11 production sites</strong> + <strong>9 development sites</strong> &mdash; deliberately decentralised, close to sales markets</li>
+              <li><strong>HQ Remscheid (DE)</strong> &mdash; Johann Vaillant Technology Center: 230+ test rigs (40 for heat pumps alone)</li>
+              <li>Three-tier distribution + direct sales + online; <strong>340,000+ installing partners</strong></li>
+              <li><strong>~30 million customers worldwide</strong></li>
+              <li>All sites certified to ISO 9001, ISO 14001, ISO 45001; 100% renewable electricity at every site</li>
+              <li>Multi-country, multi-language, multi-currency &mdash; <em>exactly</em> the shape of company where Copilot's per-tenant data boundary and Purview governance pay off</li>
+            </ul>
+          </div>
+
+          <div class="card" data-block="cw">
+            <span class="block-badge b-cw">Market analytics</span>
+            <h3>Where the market is moving (and why it matters today)</h3>
+            <ul>
+              <li>Buildings sector = ~40% of EU primary energy consumption &mdash; the largest decarbonisation lever</li>
+              <li>Heat-pump installed capacity in Europe has been on a steep curve since 2020 (see the Eurostat workbook in Demo 2b)</li>
+              <li>Vaillant&rsquo;s public positioning: leader in <strong>heat pumps</strong>, <strong>gas-fired condensing boilers</strong>, <strong>digital services</strong> &mdash; the three categories that will define the next decade of residential heating</li>
+              <li>SEEDS sustainability programme: Scope 1+2 emissions <em>fully offset</em>; explicit alignment with the 1.5&deg;C goal</li>
+              <li>Hydrogen heating appliances on the public roadmap &mdash; a topic where regulatory direction is still moving in 2026</li>
+              <li>The energy-transition narrative is <em>their</em> narrative &mdash; not a side conversation</li>
+            </ul>
+          </div>
+
+          <div class="card" data-block="ft">
+            <span class="block-badge b-ft">Product analytics</span>
+            <h3>Brands &amp; product families</h3>
+            <ul>
+              <li><strong>8 brands under one roof</strong>:
+                <ul style="margin-top:6px;">
+                  <li><strong>Vaillant</strong> &mdash; the green flagship, premium, technology leader (150 years in 2024)</li>
+                  <li><strong>Saunier Duval Brand Group (SDBG)</strong> &mdash; 6 brands: <em>Saunier Duval, AWB, Bulex, Glow-worm, Hermann Saunier Duval, Protherm</em> &mdash; regionally anchored</li>
+                  <li><strong>DemirD&ouml;k&uuml;m</strong> &mdash; market leader in Turkey</li>
+                </ul>
+              </li>
+              <li><strong>Headline launch April 2026:</strong> <em>aroTHERM pro</em> &mdash; compact air-to-water heat pump for single- and multi-family homes with limited outdoor space (talking point for the energy-transition demo)</li>
+              <li>Core product families: heating, ventilation, air-conditioning, hot-water supply</li>
+              <li>Digital layer: <em>myVAILLANT</em> connected platform, control apps, service-partner apps &mdash; where their &ldquo;Vaillant GPT&rdquo; programme will land</li>
+              <li>Manufacturing Execution System (MES) drives a digitally controlled, multi-layered production process &mdash; the operational data exists, the question is which slices to surface in agents</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="banner ft" style="margin-top:18px;">
+          <span class="icon">&#127919;</span>
+          <div>
+            <h3>Three things to weave into the conversation</h3>
+            <ol style="margin:6px 0 0 18px;padding:0;">
+              <li><strong>&ldquo;Eight brands, 60+ countries, 30 million customers&rdquo;</strong> &mdash; reference once early; it tells them you read the homework</li>
+              <li><strong>&ldquo;aroTHERM pro launched in April&rdquo;</strong> &mdash; tells them you&rsquo;re current; bridge into the heat-pump Analyst demo</li>
+              <li><strong>&ldquo;Family-owned, watched quarterly by the owners&rdquo;</strong> &mdash; explains why a structured 12-month foundation matters more than a flashy pilot</li>
+            </ol>
+          </div>
+        </div>
+
+        <p class="source-note">
+          Sources (all public):
+          <a href="https://www.vaillant-group.com/our-company/at-a-glance/" target="_blank" rel="noopener">vaillant-group.com &mdash; At a glance</a> &middot;
+          <a href="https://www.vaillant-group.com/our-company/sites/" target="_blank" rel="noopener">Sites</a> &middot;
+          <a href="https://www.vaillant-group.com/our-brands-solutions/" target="_blank" rel="noopener">Brands &amp; solutions</a> &middot;
+          <a href="https://www.vaillant-group.com/news-stories/compact-and-flexible-to-install.html" target="_blank" rel="noopener">aroTHERM pro launch (April 2026)</a>.
+        </p>
+      </details>
+    </section>
+
+    <section id="setup">
+      <div class="eyebrow">Before the room fills up</div>
+      <h2>Setup checklist &mdash; 10 min before</h2>
+      <ul class="checklist">
+        <li>Sign in to Microsoft 365 Copilot with the demo tenant (Leila)</li>
+        <li>Open <strong>Copilot Chat</strong> in Edge &mdash; one tab</li>
+        <li>Open <strong>Copilot Cowork</strong> in a second tab &mdash; new conversation, attach the <code>m365-copilot-deck</code> skill</li>
+        <li>Have the model selector visible (top right of chat) &mdash; verify GPT-5.5 Instant + Thinking show up</li>
+        <li>Pin <strong>Idea Coach</strong> (and any custom Studio agent) from the agent gallery &mdash; ready for <code>@</code>-mention</li>
+        <li>The technical workbooks for the Excel + Analyst demos are in the bundle (one-liner below) &mdash; <code>Vaillant_Heat_Load_Catalog.xlsx</code>, <code>Eurostat_Heat_Pump_Installed_Capacity_1990-2024.xlsx</code>, <code>Eurostat_Heating_Degree_Days_1979-2024.xlsx</code></li>
+        <li>Have one blank Word document and one blank Excel workbook open in the side pane</li>
+        <li>Mirror the laptop to the big screen, font size +1 in browser (Ctrl + +)</li>
+        <li>Coffee. Water. Power cable.</li>
+      </ul>
+    </section>
+
+    <section id="timing">
+      <div class="eyebrow">Time budget</div>
+      <h2>60 minutes &mdash; how it flows</h2>
+      <p class="subtitle">Core flow for the hour. The In-app demos (Excel/Word/PowerPoint) and Teams agents (Facilitator/Interpreter) are <strong>backup material</strong> &mdash; ready to pull in if the room asks, or if you trade out one of the core demos.</p>
+      <ul class="timing">
+        <li><span class="when">11:30 – 11:35</span><span class="what">Frame the hour <span class="muted">&ldquo;You came to see Foundry &mdash; let me show you the other side: where the people actually meet the AI.&rdquo;</span></span></li>
+        <li><span class="when">11:35 – 11:45</span><span class="what">Demo 1 · Multi-Model Choice <span class="muted">Same question, three models. Show the selector. Show the difference.</span></span></li>
+        <li><span class="when">11:45 – 12:00</span><span class="what">Demo 2 · Multiple specialists, one Copilot UI <span class="muted">Switch into Researcher → back to Chat → @-mention Idea Coach → @-mention a custom agent.</span></span></li>
+        <li><span class="when">12:00 – 12:02</span><span class="what">Kick off Demo 3 in Cowork <span class="muted">Send the task. Let it run in the background.</span></span></li>
+        <li><span class="when">12:02 – 12:20</span><span class="what">Discussion + Q&amp;A round 1 <span class="muted">Show the deck-skill running in Cowork as a window. Talk Foundry vs Copilot.</span></span></li>
+        <li><span class="when">12:20 – 12:27</span><span class="what">Reveal: Cowork result <span class="muted">Open the generated deck. Walk through how it was built.</span></span></li>
+        <li><span class="when">12:27 – 12:30</span><span class="what">Wrap + next step <span class="muted">After the summer: what would a 6-week pilot look like.</span></span></li>
+      </ul>
+    </section>
+
+    <!-- DEMO 0 — WORK IQ -->
+    <section id="workiq">
+      <span class="block-badge b-ft">Demo 0</span>
+      <h2>Work IQ &mdash; the boring magic everyone uses every day</h2>
+      <p class="subtitle">
+        Before the &ldquo;multi-model, multi-agent, agentic skills&rdquo; story, anchor on this:
+        the daily reason 200 million people open Copilot Chat is not strategy &mdash; it&rsquo;s the 30 seconds you save before every meeting, the email you find without scrolling, the reply you don&rsquo;t have to write from scratch. Start here so the room sees themselves in the demo.
+      </p>
+
+      <div class="banner">
+        <span class="icon">&#9201;&#65039;</span>
+        <div>
+          <h3>How to run it</h3>
+          <p>Open Copilot Chat. Don&rsquo;t change a thing in the UI. Just paste the four prompts in order. Each one should take under 30 seconds to answer. The point is rhythm, not depth.</p>
+        </div>
+      </div>
+
+      <article class="prompt-card" data-block="ft">
+        <div class="prompt-head">
+          <div>
+            <h3>Catch me up</h3>
+            <p class="prompt-meta">The morning ritual. Copilot reads inbox + Teams + meetings in one shot.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+        <div class="audience-line">
+          &ldquo;This is the prompt I run every morning before my coffee is finished.&rdquo;
+        </div>
+<pre>What did I miss yesterday afternoon and this morning? Anything urgent in my inbox or Teams I should look at before my next meeting.</pre>
+      </article>
+
+      <article class="prompt-card" data-block="ft">
+        <div class="prompt-head">
+          <div>
+            <h3>Find that thing</h3>
+            <p class="prompt-meta">Cross-app search the way it should always have worked. Files, chats, mails, all at once.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+        <div class="audience-line">
+          &ldquo;I know someone shared that &mdash; but where? Copilot finds it across mail, chat and files in one go.&rdquo;
+        </div>
+<pre>Someone shared something about EU heat pump policy in the last couple of weeks. I think it was in a Teams chat or maybe an email. Find it and give me the gist.</pre>
+      </article>
+
+      <article class="prompt-card" data-block="ft">
+        <div class="prompt-head">
+          <div>
+            <h3>Draft the reply</h3>
+            <p class="prompt-meta">Open any recent email in Outlook, click Copilot &rarr; Draft. Or do it from Chat.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+        <div class="audience-line">
+          &ldquo;The 60 seconds it takes to write &lsquo;thanks, will come back to you by Friday&rsquo; \u2014 gone.&rdquo;
+        </div>
+<pre>Draft a short reply to the last email I got from my team about the AI programme. Thank them for the work, say I'll come back with feedback by Friday, keep it warm but not gushing. Three sentences max.</pre>
+      </article>
+
+      <article class="prompt-card" data-block="ft">
+        <div class="prompt-head">
+          <div>
+            <h3>Recap the meeting I missed</h3>
+            <p class="prompt-meta">Works against a recorded Teams meeting transcript. If no recent one exists, swap for &ldquo;the meeting I had on Monday&rdquo;.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+        <div class="audience-line">
+          &ldquo;You don&rsquo;t need to attend every meeting. You need the three things that came out of it.&rdquo;
+        </div>
+<pre>I missed yesterday's leadership sync. What were the three things that actually got decided, and is there anything that needs me to follow up?</pre>
+      </article>
+
+      <div class="grid two">
+        <div class="card" data-block="ft">
+          <h3>Talking points</h3>
+          <ul>
+            <li>This is the &ldquo;why everyone uses it&rdquo; layer &mdash; before any AI strategy conversation</li>
+            <li>Works against the data the user already has access to &mdash; nothing new to configure</li>
+            <li>Same data boundary, same Purview audit, same model access controls as the rest of Copilot</li>
+            <li>Quick wins build adoption; adoption is the prerequisite for everything that follows</li>
+          </ul>
+        </div>
+        <div class="card" data-block="ft">
+          <h3>Bridge into Demo 1</h3>
+          <ul>
+            <li>&ldquo;So far, one model, picking what to do under the hood. Now watch what happens when <em>I</em> pick the model.&rdquo;</li>
+            <li>Sets up Multi-Model as a deliberate choice, not just a feature</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- DEMO 1 — MULTI-MODEL -->
+    <section id="mm">
+      <span class="block-badge b-mm">Demo 1</span>
+      <h2>Multi-Model Choice &mdash; one UI, many brains</h2>
+      <p class="subtitle">
+        Open Copilot Chat. Point at the model selector top-right. Explain in one sentence: <em>&ldquo;Copilot lets you pick which model thinks about the prompt &mdash; without changing the app, the data boundary, or the user experience.&rdquo;</em>
+        Then run the same question on three settings.
+      </p>
+
+      <div class="banner">
+        <span class="icon">🎬</span>
+        <div>
+          <h3>How to run it</h3>
+          <p>1) Set selector to <strong>Quick response</strong>, paste prompt A. 2) Open a fresh chat, set to <strong>Think deeper</strong>, paste the same prompt A. 3) Paste prompt B in <strong>Auto</strong> &mdash; let it route.</p>
+        </div>
+      </div>
+
+      <article class="prompt-card" data-block="mm">
+        <div class="prompt-head">
+          <div>
+            <h3>Prompt A &mdash; the &ldquo;same question, two brains&rdquo; moment</h3>
+            <p class="prompt-meta">A genuinely cross-cutting business question. Quick gives a clean answer, Think Deeper structures, weighs, names risks.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+        <div class="audience-line">
+          &ldquo;Same prompt, two models. Watch what changes &mdash; not just the words, the <em>shape</em> of the answer.&rdquo;
+        </div>
+<pre>I'm trying to make the case to our board for one group-wide AI programme instead of letting each brand do their own thing. What are the strongest arguments on both sides? Don't sugarcoat the messy side.</pre>
+      </article>
+
+      <article class="prompt-card" data-block="mm">
+        <div class="prompt-head">
+          <div>
+            <h3>Prompt B &mdash; let Auto decide</h3>
+            <p class="prompt-meta">Tricky middle-ground task. Auto-routing should silently pick the reasoning model.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+<pre>What's actually happening with EU heating policy right now? What's in force, what's coming in the next 18 months, and what should a European manufacturer be paying attention to that isn't obvious from the headlines? Cite sources.</pre>
+      </article>
+
+      <article class="prompt-card" data-block="mm">
+        <div class="prompt-head">
+          <div>
+            <h3>Prompt C &mdash; the small-task case for Quick</h3>
+            <p class="prompt-meta">Not every prompt needs deep reasoning. Show the audience that picking the right model is a skill.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+<pre>Five subject line ideas for an internal email announcing we're kicking off a group-wide AI programme. Confident, not hyped, under 8 words each.</pre>
+      </article>
+
+      <div class="grid two">
+        <div class="card" data-block="mm">
+          <h3>Talking points</h3>
+          <ul>
+            <li>One UI hides model complexity from the business user</li>
+            <li>Admin controls which models are allowed in the tenant</li>
+            <li>Same data boundary (EDP), same Purview audit, regardless of model</li>
+            <li>When &ldquo;Vaillant GPT&rdquo; is ready &mdash; it can sit here too, as one of the choices</li>
+          </ul>
+        </div>
+        <div class="card" data-block="mm">
+          <h3>Connect-to-Foundry moment</h3>
+          <ul>
+            <li>Models in Copilot today: a curated catalog selected by Microsoft</li>
+            <li>Models in Foundry: <em>any</em> model you want &mdash; OpenAI, Anthropic, Llama, Mistral, custom fine-tunes</li>
+            <li>The bridge: Foundry-deployed agents can surface inside Copilot Chat (Demo 2)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- DEMO 2 — MULTI-AGENT -->
+    <section id="ma">
+      <span class="block-badge b-ma">Demo 2</span>
+      <h2>Many specialists, one Copilot UI</h2>
+      <p class="subtitle">
+        Two ways to bring a specialist into your work: <strong>switch into</strong> one of Microsoft's first-party tools (Researcher, Analyst) from the Agents pane on the left, or <strong>@-mention</strong> a regular agent (Idea Coach, any custom Copilot Studio / Foundry agent) right inside Copilot Chat. Same UI for the user. The chat becomes the meeting room.
+      </p>
+
+      <div class="banner ma">
+        <span class="icon">👥</span>
+        <div>
+          <h3>The metaphor for the audience</h3>
+          <p>&ldquo;Imagine if every time you needed expertise, you could pull a specialist into your chat &mdash; without switching tools, without losing context, without retyping the brief. That's what's happening here.&rdquo;</p>
+        </div>
+      </div>
+
+      <article class="prompt-card" data-block="ma">
+        <div class="prompt-head">
+          <div>
+            <h3>Step 1 &mdash; open the Researcher</h3>
+            <p class="prompt-meta">In Copilot Chat, select <strong>Researcher</strong> from the Agents pane on the left (Researcher is a first-party Copilot tool, not an @-mentioned agent &mdash; you switch into it). Then paste the prompt.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+        <div class="audience-line">
+          &ldquo;Same Copilot Chat &mdash; I just switched into the Researcher experience.&rdquo;
+        </div>
+<pre>What are the most-cited public trends shaping the European energy-transition narrative between now and 2028 from a board-level perspective? Cover: investment direction, regulatory tone, public sentiment, and adjacent technology shifts (electrification, digital services, sustainability reporting). One-paragraph executive summary plus 5 bullet trends with sources.</pre>
+      </article>
+
+      <article class="prompt-card" data-block="ma">
+        <div class="prompt-head">
+          <div>
+            <h3>Step 2 &mdash; switch back to Copilot Chat and @-mention Idea Coach</h3>
+            <p class="prompt-meta">Click back to the main Copilot Chat thread (or open a fresh one and paste the Researcher output as context). Then type <code>@</code> and pick <strong>Idea Coach</strong> &mdash; Idea Coach <em>is</em> a regular agent that responds to @-mentions.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+        <div class="audience-line">
+          &ldquo;Two different specialists, same Copilot UI &mdash; no copy-paste between tools.&rdquo;
+        </div>
+<pre>@Idea-Coach Based on the trends summary above, design a 30-minute discussion format for an executive committee. Goal: get the room aligned on the top 3 strategic implications and leaving with one decision to escalate to the board. Give me the agenda, the framing question on each slide, and the one provocation I should use to start the conversation.</pre>
+      </article>
+
+      <article class="prompt-card" data-block="ma">
+        <div class="prompt-head">
+          <div>
+            <h3>Step 3 &mdash; bring in a custom agent</h3>
+            <p class="prompt-meta">Type <code>@</code> and pick any custom agent in the tenant (e.g. a Copilot Studio demo agent). Replace <code>&lt;agent&gt;</code> in the prompt below with the actual agent name before pasting.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+        <div class="audience-line">
+          &ldquo;And this is where your own custom agent &mdash; built in Copilot Studio or Foundry &mdash; plugs into the same chat.&rdquo;
+        </div>
+<pre>@<agent> Take the executive discussion format we just designed. Sharpen the opening 10 minutes so it lands with a CFO who is sceptical about AI ROI claims. Keep it concrete. Keep it honest. Surface the one financial question they will ask first.</pre>
+      </article>
+
+      <div class="grid two">
+        <div class="card" data-block="ma">
+          <h3>What the audience sees</h3>
+          <ul>
+            <li>One chat thread &mdash; no tabs, no switching</li>
+            <li>Each agent labels itself, shows its sources</li>
+            <li>Context carries from message to message across agents</li>
+            <li>The user is the orchestrator &mdash; not a tool integrator</li>
+          </ul>
+        </div>
+        <div class="card" data-block="ma">
+          <h3>The Foundry bridge</h3>
+          <ul>
+            <li>Foundry agents publish to Copilot via the agent gallery</li>
+            <li>Same governance: tenant, identity, Purview audit, EDP</li>
+            <li>Business users don't need to know it came from Foundry</li>
+            <li>That's what &ldquo;Copilot is the UI&rdquo; really means</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- DEMO 2b — ANALYST AGENT -->
+    <section id="analyst">
+      <span class="block-badge b-ma">Demo 2b</span>
+      <h2>Analyst &mdash; the data specialist in the chat</h2>
+      <p class="subtitle">
+        Same Copilot Chat &mdash; switch into the <strong>Analyst</strong> experience. Analyst is a first-party Copilot tool (not an @-mentioned agent): you select it from the Agents pane on the left.
+        It writes Python under the hood, reads any file you upload, and answers in plain English with charts. Exactly the move when a CFO or strategy lead pushes back with &ldquo;but what do the numbers say?&rdquo;
+      </p>
+
+      <div class="banner ma">
+        <span class="icon">�</span>
+        <div>
+          <h3>The dataset that lands in this room &mdash; heat pump installed capacity, 1990-2024</h3>
+          <p>For a heating-systems manufacturer with three AI leaders at the table, there is exactly one public dataset that hits the bullseye: <strong>Eurostat <code>nrg_inf_hptc</code> &mdash; Heat pumps, installed thermal capacity by country</strong> (last update 13.05.2026). It tracks every European country&rsquo;s installed MW of aerothermal, geothermal and hydrothermal capacity from 1990 to 2024. The growth curves are dramatic and unimpeachable. The bundle file: <strong><code>Eurostat_Heat_Pump_Installed_Capacity_1990-2024.xlsx</code></strong> &mdash; six sheets, EU aggregates highlighted, README explains every column.</p>
+          <p style="margin-top:8px;">Companion file for the cross-dataset prompt: <strong><code>Eurostat_Heating_Degree_Days_1979-2024.xlsx</code></strong> &mdash; annual HDD per country, the standard metric the heating industry uses to compare markets.</p>
+        </div>
+      </div>
+
+      <div class="checklist" style="margin-bottom:18px;">
+        <p style="margin:0 0 8px 0;font-weight:600;">How to run it</p>
+        <ul style="margin:0;padding-left:18px;">
+          <li>In Copilot Chat, select <strong>Analyst</strong> from the Agents pane on the left.</li>
+          <li>Upload <strong>both</strong> Eurostat workbooks from the demo bundle &mdash; the heat-pump capacity file <em>and</em> the heating-degree-days file.</li>
+          <li>Run the three prompts in sequence — each one shows Analyst doing something Excel-Copilot can&rsquo;t.</li>
+          <li>End by asking &ldquo;show me the Python code you used&rdquo; — that&rsquo;s the moment for the technical person in the room.</li>
+        </ul>
+        <div class="file-tags" style="margin-top:10px;">
+          <a class="file-tag" href="https://github.com/jenssgb/customer-demo-files/raw/main/Vaillant/Eurostat_Heat_Pump_Installed_Capacity_1990-2024.xlsx" download>
+            <span class="file-icon xlsx">XLS</span><span class="file-name">Eurostat_Heat_Pump_Installed_Capacity_1990-2024.xlsx</span><span class="file-dl">↓</span>
+          </a>
+          <a class="file-tag" href="https://github.com/jenssgb/customer-demo-files/raw/main/Vaillant/Eurostat_Heating_Degree_Days_1979-2024.xlsx" download>
+            <span class="file-icon xlsx">XLS</span><span class="file-name">Eurostat_Heating_Degree_Days_1979-2024.xlsx</span><span class="file-dl">↓</span>
+          </a>
+        </div>
+      </div>
+
+      <article class="prompt-card" data-block="ma">
+        <div class="prompt-head">
+          <div>
+            <h3>1. The number a board chair can&rsquo;t calculate in their head</h3>
+            <p class="prompt-meta">CAGR + inflection point. Excel-Copilot doesn&rsquo;t do this — Analyst writes pandas, runs it, explains the result.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+        <div class="audience-line">
+          &ldquo;Compound growth rate per country, automatically. And it told me when the curve bent. That&rsquo;s the question I&rsquo;d open the board meeting with.&rdquo;
+        </div>
+<pre>Take the "All heat pumps" sheet. For each of the top 10 European markets by 2024 installed capacity, calculate the 10-year compound annual growth rate (2014 to 2024). Then for each of those countries, find the year where growth clearly accelerated — the inflection point — and put it in the same table. Sort by CAGR. Give me one sentence per country on what likely caused the inflection.</pre>
+      </article>
+
+      <article class="prompt-card" data-block="ma">
+        <div class="prompt-head">
+          <div>
+            <h3>2. The cross-dataset question only Analyst can answer</h3>
+            <p class="prompt-meta">This is the killer move. Two different Eurostat files, joined on country, correlation analysis, outlier detection — in one conversation.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+        <div class="audience-line">
+          &ldquo;Two datasets, joined on country. The intuition was wrong, and now I know which countries to look at.&rdquo;
+        </div>
+<pre>Now use both files I uploaded. For each country, take from the heat-pump file the total installed capacity in MW in 2024, and from the heating-degree-days file the 10-year average HDD (the standard heating-industry climate metric). Normalise capacity per HDD so we compare like for like. Join on country. Show me a scatter plot (HDD on X, installed capacity in MW on Y) with a fitted regression line and the R-squared. Then list the three countries that are clearly above the line (over-adopters relative to climate) and the three that are clearly below (under-adopters). One sentence on each on what might explain it.</pre>
+      </article>
+
+      <article class="prompt-card" data-block="ma">
+        <div class="prompt-head">
+          <div>
+            <h3>3. Show me your work</h3>
+            <p class="prompt-meta">The audit moment. The room sees that this is pandas + matplotlib, reproducible, not a black box. <strong>This single follow-up is the most powerful prompt of the whole demo for the AI operationalizer.</strong></p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+        <div class="audience-line">
+          &ldquo;That&rsquo;s the Python code it ran. Reproducible, auditable, and good enough that an analyst could pick it up tomorrow.&rdquo;
+        </div>
+<pre>Show me the Python code you used for the correlation analysis. Add comments so a junior analyst can read it. Then suggest two ways the analysis could be sharpened if I had access to my own internal sales data alongside this public data.</pre>
+      </article>
+
+      <div class="grid two">
+        <div class="card" data-block="ma">
+          <h3>Why this lands at C-level</h3>
+          <ul>
+            <li>No data scientist in the loop &mdash; the leader runs the analysis themselves</li>
+            <li>Code is visible on request &mdash; not a black box, auditable</li>
+            <li>Public data — no risk of someone in the room saying &ldquo;those numbers are wrong&rdquo;</li>
+            <li>Same governance fabric: tenant boundary, Purview audit, EDP on by default</li>
+          </ul>
+        </div>
+        <div class="card" data-block="ma">
+          <h3>The connect-to-Foundry line</h3>
+          <ul>
+            <li>Analyst today: Microsoft-built, ready in Copilot, no setup</li>
+            <li>Same pattern in Foundry: <em>your own</em> analyst-style agent &mdash; on <em>your</em> data &mdash; with your business rules</li>
+            <li>Both publish into Copilot Chat &mdash; the leader sees one UI, not two</li>
+          </ul>
+        </div>
+      </div>
+      <p class="source-note">
+        Sources:
+        <a href="https://learn.microsoft.com/microsoft-365/admin/manage/manage-copilot-agents-integrated-apps" target="_blank" rel="noopener">Manage agents in Microsoft 365 admin center</a> (Researcher &amp; Analyst as first-party Copilot tools) &middot;
+        <a href="https://ec.europa.eu/eurostat/databrowser/view/nrg_ind_ren/default/table?lang=en" target="_blank" rel="noopener">Eurostat nrg_ind_ren</a> &middot;
+        <a href="https://ehpa.org/market-data/" target="_blank" rel="noopener">EHPA market data</a>.
+      </p>
+    </section>
+
+    <!-- DEMO 3 — COWORK -->
+    <section id="cw">
+      <span class="block-badge b-cw">Demo 3</span>
+      <h2>Cowork &mdash; the long-running assistant, with a skill</h2>
+      <p class="subtitle">
+        Cowork is the early shape of what's coming next: an assistant that doesn't answer in 5 seconds, but works for minutes &mdash; or hours &mdash; on a real artifact. You can give it skills.
+        Today we attach an M365 Copilot-style PowerPoint design skill, hand it a brief, and come back to a finished deck.
+      </p>
+
+      <div class="banner cw">
+        <span class="icon">⏳</span>
+        <div>
+          <h3>How to run it (kick off at minute ~32)</h3>
+          <p>Open Cowork in a fresh conversation. Confirm the <strong>m365-copilot-deck</strong> skill is attached. Paste prompt 1. Tell the audience: &ldquo;Let's leave this running in the background while we keep talking.&rdquo;</p>
+        </div>
+      </div>
+
+      <article class="prompt-card" data-block="cw">
+        <div class="prompt-head">
+          <div>
+            <h3>Prompt 1 &mdash; the brief for Cowork</h3>
+            <p class="prompt-meta">Short, human. The attached skill already knows the visual style — you don't have to spell it out.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+        <div class="audience-line">
+          &ldquo;Cowork is going to build me a real deck while we keep talking. Let's see what shows up.&rdquo;
+        </div>
+<pre>Build me a 6-slide executive deck on "Why AI changes the way we talk to our customers in 2026". Use the deck skill I attached. Audience: a business leadership team starting their AI journey. Tone: practical, optimistic, no buzzwords. Slide 1 a strong cover, slide 6 a single call-to-action. Show me thumbnails along the way so I can spot anything off.</pre>
+      </article>
+
+      <article class="prompt-card" data-block="cw">
+        <div class="prompt-head">
+          <div>
+            <h3>Prompt 2 &mdash; iterate (after the reveal)</h3>
+            <p class="prompt-meta">Show that Cowork doesn't just produce &mdash; it iterates. One round of edits, in plain language.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+<pre>Looks good. Two changes: on slide 3 the stat is too generic &mdash; replace it with a "what changed for the customer" framing instead of a number. And on slide 5, the layout feels heavy &mdash; lighten the card grid and pull the title up. Re-render the thumbnails so I can see.</pre>
+      </article>
+
+      <article class="prompt-card" data-block="cw">
+        <div class="prompt-head">
+          <div>
+            <h3>Prompt 3 &mdash; the &ldquo;hand it off&rdquo; moment</h3>
+            <p class="prompt-meta">Demonstrates that the output is a real file, ready to share.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+<pre>Save the final deck to my OneDrive as "AI-and-our-customers-2026-v1.pptx" and draft a 3-sentence Teams message I can send to my team with the link and what to look at first.</pre>
+      </article>
+
+      <div class="grid two">
+        <div class="card" data-block="cw">
+          <h3>Why this matters for Vaillant</h3>
+          <ul>
+            <li>Cowork = the next layer above &ldquo;chat&rdquo; &mdash; longer tasks, real artifacts</li>
+            <li>Skills are reusable: design system, brand voice, data-cleaning recipes</li>
+            <li>You bring the skill; Cowork brings the orchestration</li>
+            <li>Today: decks &amp; documents. Soon: pipelines that run for hours.</li>
+          </ul>
+        </div>
+        <div class="card" data-block="cw">
+          <h3>What the audience should feel</h3>
+          <ul>
+            <li>&ldquo;Wait, it actually built the file &mdash; not just described it.&rdquo;</li>
+            <li>&ldquo;That's a tool a marketer/PMO could really use.&rdquo;</li>
+            <li>&ldquo;If I gave it our brand guidelines as a skill, it would do this every time.&rdquo;</li>
+            <li>The honest framing: &ldquo;Cowork is early. Today it's good for content. Tomorrow it does much more.&rdquo;</li>
+          </ul>
+        </div>
+      </div>
+      <p class="source-note">
+        Skill source: <code>Kunden/Vaillant/demos/skill-cowork-deck/</code> &mdash; M365 Copilot Aurora design system (PPTX, python-pptx). Attach it in the Cowork conversation before the demo.
+      </p>
+    </section>
+
+    <!-- ==================== IN-APP DEMOS ==================== -->
+
+    <!-- EXCEL -->
+    <section id="excel">
+      <span class="block-badge b-ft">In-app</span>
+      <h2>Excel &mdash; Copilot inside the spreadsheet</h2>
+      <p class="subtitle">
+        Open <code>Vaillant_Heat_Load_Catalog.xlsx</code> from the demo files. It&rsquo;s a synthetic but EN 12831-consistent catalog of
+        150 reference buildings across six European climate zones &mdash; building type, area, construction standard, heat load (kW),
+        annual demand, recommended aroTHERM model, buffer tank size. Pure engineering data, no commercials.
+        Two flavors to show: (a) Copilot in Excel for quick analysis and chart creation;
+        (b) <strong>Edit with Copilot in Excel</strong> (formerly Agent Mode &mdash; renamed March 2026) for multi-step workbook automation.
+      </p>
+      <div class="file-tags">
+        <a class="file-tag" href="https://github.com/jenssgb/customer-demo-files/raw/main/Vaillant/Vaillant_Heat_Load_Catalog.xlsx" download>
+          <span class="file-icon xlsx">XLS</span><span class="file-name">Vaillant_Heat_Load_Catalog.xlsx</span><span class="file-dl">↓</span>
+        </a>
+      </div>
+
+      <div class="banner ft">
+        <span class="icon">📊</span>
+        <div>
+          <h3>What's GA today</h3>
+          <p>Copilot in Excel: highlight insights, add formulas, create charts, conditional formatting, sort/filter &mdash; in natural language. &ldquo;Edit with Copilot in Excel&rdquo; (formerly Agent Mode): multi-step workbooks, tables, PivotTables, Python-backed analysis via the Tools menu.</p>
+        </div>
+      </div>
+
+      <article class="prompt-card" data-block="ft">
+        <div class="prompt-head">
+          <div>
+            <h3>1. Sizing check across the catalog</h3>
+            <p class="prompt-meta">Sheet &ldquo;Buildings&rdquo; holds 150 reference buildings. Copilot reads the table directly.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+        <div class="audience-line">
+          &ldquo;I describe what I want to know &mdash; no formula, no VLOOKUP.&rdquo;
+        </div>
+<pre>Look at the Buildings sheet. For each climate zone, give me the average heat load in kW and the average annual heating demand in kWh per square metre. Then add a column called "Sizing Reserve %" calculated as (Model Nominal kW − Heat Load kW) / Heat Load kW × 100, and flag any building where the reserve is under 5% in red or over 50% in amber.</pre>
+      </article>
+
+      <article class="prompt-card" data-block="ft">
+        <div class="prompt-head">
+          <div>
+            <h3>2. One sentence, one chart</h3>
+            <p class="prompt-meta">Copilot picks the chart type, inserts it on the sheet.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+<pre>Create a scatter chart with Heated Area (m²) on the X axis, Heat Load (kW) on the Y axis, bubble size = Annual Electricity (kWh/a), and colour by Construction Standard. Add a short interpretation paragraph in a text box below the chart on what the cluster pattern tells us about retrofit potential.</pre>
+      </article>
+
+      <article class="prompt-card" data-block="ft">
+        <div class="prompt-head">
+          <div>
+            <h3>3. Edit with Copilot &mdash; build the installer one-pager</h3>
+            <p class="prompt-meta">Switch to <strong>Tools &rarr; Edit with Copilot in Excel</strong>. Multi-step: plans across sheets and executes.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+        <div class="audience-line">
+          &ldquo;That&rsquo;s the sheet an installer fills in &mdash; built end-to-end in one prompt.&rdquo;
+        </div>
+<pre>Build me a new sheet called "Installer Sizing Tool". Add input cells for: Heated Area (m²), Construction Standard, Climate Zone. Use lookups from the Construction and Climate Zones sheets to compute Heat Load (kW), Annual Heating Demand (kWh/a), Recommended Model, Buffer Tank (L) and Annual Electricity (kWh/a). Add a small chart of the heat load on a winter day curve (proxy by full load hours profile). Format it as an exec-ready one-pager with Vaillant blue headers.</pre>
+      </article>
+
+      <p class="source-note">
+        Sources:
+        <a href="https://support.microsoft.com/en-us/copilot-excel" target="_blank" rel="noopener">Copilot in Excel help center</a> &middot;
+        <a href="https://learn.microsoft.com/copilot/microsoft-365-copilot-in-excel" target="_blank" rel="noopener">Microsoft 365 Copilot in Excel</a>.
+      </p>
+    </section>
+
+    <!-- WORD -->
+    <section id="word">
+      <span class="block-badge b-ft">In-app</span>
+      <h2>Word &mdash; from messy draft to exec brief</h2>
+      <p class="subtitle">
+        Open <code>AI_Strategy_Brief_DRAFT.docx</code>. It's intentionally rough &mdash; the kind of thing a senior leader throws together on a Friday afternoon before a board prep weekend.
+        Watch Copilot turn it into a structured exec brief in three moves.
+      </p>
+      <div class="file-tags">
+        <a class="file-tag" href="https://github.com/jenssgb/customer-demo-files/raw/main/Vaillant/AI_Strategy_Brief_DRAFT.docx" download>
+          <span class="file-icon docx">DOC</span><span class="file-name">AI_Strategy_Brief_DRAFT.docx</span><span class="file-dl">↓</span>
+        </a>
+      </div>
+
+      <article class="prompt-card" data-block="ft">
+        <div class="prompt-head">
+          <div>
+            <h3>1. Rewrite for the executive committee</h3>
+            <p class="prompt-meta">Copilot in Word, side pane. Reads the full document, rewrites in place (you keep the original via Undo).</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+        <div class="audience-line">
+          &ldquo;This is the same content &mdash; same author &mdash; in 60 seconds.&rdquo;
+        </div>
+<pre>Rewrite this draft as a clean 1-page executive brief for the executive committee. Keep the substance, lose the rambling. Structure: Strategic context, Ambition statement, Three commitments (12 months), Risks, Decisions needed. Tone: confident, concise, no buzzwords. Use headings.</pre>
+      </article>
+
+      <article class="prompt-card" data-block="ft">
+        <div class="prompt-head">
+          <div>
+            <h3>2. Add what's missing</h3>
+            <p class="prompt-meta">Copilot reads the document, then inserts the new section in the right place.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+<pre>Add a "Success metrics" section. Suggest 5 measurable, board-readable KPIs for the first 12 months of a group-wide AI programme tied to the energy-transition narrative. For each KPI: name, why it matters at board level, how to measure it, 12-month target. Format as a clean table.</pre>
+      </article>
+
+      <article class="prompt-card" data-block="ft">
+        <div class="prompt-head">
+          <div>
+            <h3>3. Summarize &amp; reuse</h3>
+            <p class="prompt-meta">The same content, repackaged for a different audience.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+<pre>Give me three outputs based on the brief: (1) a 100-word version for the all-leaders Teams channel, (2) a 25-word version for the board dashboard tile, (3) a 3-bullet talking-points version for me to use opening the next executive committee meeting.</pre>
+      </article>
+
+      <p class="source-note">
+        Sources:
+        <a href="https://support.microsoft.com/en-us/copilot-word" target="_blank" rel="noopener">Copilot in Word help center</a> &middot;
+        <a href="https://learn.microsoft.com/copilot/microsoft-365-copilot-in-word" target="_blank" rel="noopener">Microsoft 365 Copilot in Word</a>.
+      </p>
+    </section>
+
+    <!-- POWERPOINT -->
+    <section id="pptx">
+      <span class="block-badge b-ft">In-app</span>
+      <h2>PowerPoint &mdash; presentation in one prompt</h2>
+      <p class="subtitle">
+        Open a blank PowerPoint. Open the Copilot pane. Two paths to show:
+        <strong>Create from prompt</strong> (Copilot drafts a deck from scratch with Designer-driven layouts) and <strong>Create from file</strong>
+        (grounded on the Word brief we just polished &mdash; same content, deck format).
+      </p>
+
+      <article class="prompt-card" data-block="ft">
+        <div class="prompt-head">
+          <div>
+            <h3>1. Create from prompt &mdash; from zero to deck</h3>
+            <p class="prompt-meta">Designer renders each slide; Copilot picks layouts and stock images. Don't over-direct &mdash; the magic is in the speed.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+        <div class="audience-line">
+          &ldquo;I just told it the topic &mdash; the deck is real, with layouts and images.&rdquo;
+        </div>
+<pre>Create a 7-slide presentation titled "AI and the energy-transition story — a practical starting point". Audience: executive committee of a multi-brand European industrial company. Cover: 1) why now, 2) where AI strengthens the customer narrative, 3) where it helps internal teams move faster, 4) where it is NOT a good fit, 5) what a structured 12-month foundation looks like, 6) success metrics the board can read, 7) the decision needed today.</pre>
+      </article>
+
+      <article class="prompt-card" data-block="ft">
+        <div class="prompt-head">
+          <div>
+            <h3>2. Create from file &mdash; grounded on the Word brief</h3>
+            <p class="prompt-meta">Reference the cleaned-up Word document. Copilot builds slides that mirror the document structure.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+        <div class="file-tags">
+          <a class="file-tag" href="https://github.com/jenssgb/customer-demo-files/raw/main/Vaillant/AI_Strategy_Brief_DRAFT.docx" download>
+            <span class="file-icon docx">DOC</span><span class="file-name">AI_Strategy_Brief_DRAFT.docx</span><span class="file-dl">↓</span>
+          </a>
+        </div>
+<pre>Create a presentation from /AI_Strategy_Brief_DRAFT.docx. One section heading per slide. Keep each slide to 5 bullets max. Add a closing call-to-action slide that asks the executive committee to confirm the named owner for each of the three commitments.</pre>
+      </article>
+
+      <article class="prompt-card" data-block="ft">
+        <div class="prompt-head">
+          <div>
+            <h3>3. Iterate the deck in chat</h3>
+            <p class="prompt-meta">Edit, add, restructure slides from the Copilot side pane.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+<pre>Add a slide between slide 4 and 5 that compares low-code (Copilot Studio) vs pro-code (Foundry) approaches in a 2-column visual. Keep it executive-friendly &mdash; no jargon. Then translate the whole deck into German &mdash; keep the layouts as they are.</pre>
+      </article>
+
+      <p class="source-note">
+        Sources:
+        <a href="https://support.microsoft.com/en-us/copilot-powerpoint" target="_blank" rel="noopener">Copilot in PowerPoint help center</a> &middot;
+        <a href="https://learn.microsoft.com/copilot/microsoft-365-copilot-in-powerpoint" target="_blank" rel="noopener">Microsoft 365 Copilot in PowerPoint</a>.
+      </p>
+    </section>
+
+    <!-- ==================== TEAMS AGENTS ==================== -->
+
+    <!-- FACILITATOR -->
+    <section id="facilitator">
+      <span class="block-badge b-ma">Teams agent</span>
+      <h2>Facilitator &mdash; the agent that runs your meeting</h2>
+      <p class="subtitle">
+        Facilitator is GA in Microsoft Teams: it surfaces the agenda, tracks time, takes real-time collaborative notes,
+        captures decisions and actions. Built-in &mdash; no Copilot Studio or Foundry needed. Best demoed live in a Teams meeting with a colleague.
+      </p>
+
+      <div class="banner ma">
+        <span class="icon">🗣️</span>
+        <div>
+          <h3>How to demo without a meeting</h3>
+          <p>If you can't do a live Teams meeting in the room: open <code>Workshop_Group_AI_Strategy_Outline.txt</code> from the demo files, then run the prompts below as &ldquo;what you would type&rdquo; in the meeting chat. Talk the audience through the result.</p>
+          <div class="file-tags" style="margin-top:8px;">
+            <a class="file-tag" href="https://github.com/jenssgb/customer-demo-files/raw/main/Vaillant/Workshop_Group_AI_Strategy_Outline.txt" download>
+              <span class="file-icon txt">TXT</span><span class="file-name">Workshop_Group_AI_Strategy_Outline.txt</span><span class="file-dl">↓</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <article class="prompt-card" data-block="ma">
+        <div class="prompt-head">
+          <div>
+            <h3>1. Set the agenda</h3>
+            <p class="prompt-meta">Type in the Teams meeting chat (or describe what you'd type).</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+<pre>@Facilitator Add these agenda items: 1) Welcome and frame the choice — 5 min, 2) What we hear in the market — 10 min, 3) Three candidate narratives, discussion — 20 min, 4) Pick our top three 12-month commitments — 15 min, 5) Wrap, named owners, next checkpoint — 10 min.</pre>
+      </article>
+
+      <article class="prompt-card" data-block="ma">
+        <div class="prompt-head">
+          <div>
+            <h3>2. Mid-meeting capture</h3>
+            <p class="prompt-meta">Facilitator listens to the transcript and captures decisions as they're made.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+<pre>@Facilitator Capture the decisions and open questions from the last 10 minutes. List actions with owners if anyone was assigned.</pre>
+      </article>
+
+      <article class="prompt-card" data-block="ma">
+        <div class="prompt-head">
+          <div>
+            <h3>3. Closing &mdash; turn talk into tasks</h3>
+            <p class="prompt-meta">Preview feature: Facilitator can create tasks in Planner directly. Mention this as &ldquo;coming soon / in preview&rdquo;.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+<pre>@Facilitator Summarize what we decided today. List the action items with owners. Create a Word draft of today's decisions and a Planner task for each action. Mention that I want a status check in two weeks.</pre>
+      </article>
+
+      <div class="grid two">
+        <div class="card" data-block="ma">
+          <h3>What it gives Vaillant</h3>
+          <ul>
+            <li>Meetings end with a real artifact (notes + actions), not a vague memory</li>
+            <li>Loop file lands in OneDrive automatically &mdash; searchable, owned by the org</li>
+            <li>No license cost on top &mdash; included with M365 Copilot</li>
+            <li>Adoption story: this is one of the easiest &ldquo;everyone uses it within a week&rdquo; wins</li>
+          </ul>
+        </div>
+        <div class="card" data-block="ma">
+          <h3>Honest limits</h3>
+          <ul>
+            <li>Scheduled meetings only &mdash; not channel/instant/calls</li>
+            <li>One meeting language at a time (mixed-language meetings only capture the chosen one)</li>
+            <li>External users can't see Facilitator notes</li>
+            <li>Tenant must have Loop enabled &mdash; admin setting</li>
+          </ul>
+        </div>
+      </div>
+      <p class="source-note">
+        Source: <a href="https://support.microsoft.com/en-us/office/use-facilitator-in-meetings-with-microsoft-365-copilot-2dbc8c63-94e2-4a3a-820e-e30c92c9f077" target="_blank" rel="noopener">Use Facilitator in meetings</a> &middot;
+        capability cheat sheet in <code>Agents/M365-Agents/Facilitator/</code> in this repo.
+      </p>
+    </section>
+
+    <!-- INTERPRETER -->
+    <section id="interpreter">
+      <span class="block-badge b-ma">Teams agent</span>
+      <h2>Interpreter &mdash; real-time meeting translation</h2>
+      <p class="subtitle">
+        Interpreter is GA in Microsoft Teams: real-time speech-to-speech translation in 9 languages,
+        with the option to clone your voice so the translation sounds like <em>you</em>.
+        For a multilingual European company with engineering, service, sales across DE/NL/FR/IT/ES, this changes how cross-border meetings happen.
+      </p>
+
+      <div class="banner ma">
+        <span class="icon">🌐</span>
+        <div>
+          <h3>What it does &mdash; one sentence</h3>
+          <p>Each participant picks their language. They hear everyone else &mdash; live &mdash; translated into theirs. Optional: their voice is cloned (one-time consent) so the translated audio matches them.</p>
+        </div>
+      </div>
+
+      <article class="prompt-card" data-block="ma">
+        <div class="prompt-head">
+          <div>
+            <h3>The scenario to describe</h3>
+            <p class="prompt-meta">Use this as the framing story. Tie it back to a multi-country European leadership team — the kind of room where strategy nuance gets lost when everyone forces themselves into English.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+        <div class="audience-line">
+          &ldquo;Imagine your French Head of Strategy joining the Cologne executive committee &mdash; speaking French, hearing the German leaders in French, contributing at full speed.&rdquo;
+        </div>
+<pre>A monthly executive-committee strategy session. Participants: 5 leaders in Germany, 1 group CMO in the UK, 1 Head of Strategy in France (most precise in French), 1 Head of Digital Services in the Netherlands (bilingual), 1 Head of Brand in Spain (more precise in Spanish on framing questions). Today every participant defaults to English — which slows the room and quietly silences the people who think in nuance in their own language.
+
+With Interpreter: each participant picks their language at the start. They speak in their own language. They hear everyone in their own language. The strategy debate runs at full speed, in every language, simultaneously. Nuance lands. Decisions stay sharp.
+
+Operationally: takes one tenant setting + each participant opts in to voice cloning once (or skips it — they still get translated audio in a neutral voice).</pre>
+      </article>
+
+      <div class="grid two">
+        <div class="card" data-block="ma">
+          <h3>Languages GA today (9)</h3>
+          <ul>
+            <li>English, German, French, Italian, Spanish</li>
+            <li>Dutch, Portuguese, Mandarin Chinese, Japanese</li>
+            <li>More languages on the roadmap &mdash; check the release plan</li>
+          </ul>
+        </div>
+        <div class="card" data-block="ma">
+          <h3>What to be honest about</h3>
+          <ul>
+            <li>Voice cloning is opt-in per user, one-time, tenant-controlled</li>
+            <li>Technical jargon translation is good, not perfect &mdash; people still need to confirm key terms</li>
+            <li>Works on Teams desktop &amp; web today</li>
+            <li>Tenant admins control whether the feature is enabled organization-wide</li>
+          </ul>
+        </div>
+      </div>
+      <p class="source-note">
+        Source: <a href="https://support.microsoft.com/en-us/office/use-interpreter-in-microsoft-teams-meetings-d6a1cb7c-4070-4a3d-8c98-e96a6c1c5697" target="_blank" rel="noopener">Use Interpreter in Teams meetings</a> &middot;
+        feature inventory in <code>Docs/M365_COPILOT_COMPLETE_DEMO_GUIDE.md</code> (this repo).
+      </p>
+    </section>
+
+    <!-- DEMO FILES & ONE-LINER -->
+    <section id="demo-files">
+      <div class="eyebrow">Demo prep</div>
+      <h2>Demo files &amp; setup one-liner</h2>
+      <p class="subtitle">Everything the in-app demos need, downloadable to the demo VM with one PowerShell line.</p>
+
+      <article class="prompt-card" data-block="cw">
+        <div class="prompt-head">
+          <div>
+            <h3>⚡ One-liner for the demo machine</h3>
+            <p class="prompt-meta">Open PowerShell on the demo machine, paste, hit Enter. Downloads the latest Vaillant demo files <strong>from the cloud</strong> (public GitHub) into <code>Desktop\VAILLANT-Demo</code> and opens the folder.</p>
+          </div>
+          <button class="copy" type="button">Copy</button>
+        </div>
+        <div class="audience-line">
+          Cloud source: <a href="https://github.com/jenssgb/customer-demo-files/tree/main/Vaillant" target="_blank" rel="noopener">github.com/jenssgb/customer-demo-files/Vaillant</a> &mdash; public, no login required, always current.
+        </div>
+<pre>$d=[Environment]::GetFolderPath('Desktop');$z="$env:TEMP\vaillant.zip";iwr 'https://github.com/jenssgb/customer-demo-files/archive/refs/heads/main.zip' -OutFile $z;ri "$d\VAILLANT-Demo" -r -fo -ea 0;Expand-Archive $z "$env:TEMP\vaillant" -Force;mv "$env:TEMP\vaillant\customer-demo-files-main\Vaillant" "$d\VAILLANT-Demo";ri $z,"$env:TEMP\vaillant" -r -fo;ii "$d\VAILLANT-Demo"</pre>
+      </article>
+
+      <div class="grid two">
+        <div class="card" data-block="ft">
+          <h3>What's in the bundle</h3>
+          <p style="margin:0 0 10px 0; font-size:13px; color:var(--cp-text-muted);">Click any tag to download the single file, or use the one-liner above to grab the whole bundle in one go.</p>
+          <div class="file-tags">
+            <a class="file-tag" href="https://github.com/jenssgb/customer-demo-files/raw/main/Vaillant/Eurostat_Heat_Pump_Installed_Capacity_1990-2024.xlsx" download>
+              <span class="file-icon xlsx">XLS</span><span class="file-name">Eurostat_Heat_Pump_Installed_Capacity_1990-2024.xlsx</span><span class="file-dl">↓</span>
+            </a>
+            <a class="file-tag" href="https://github.com/jenssgb/customer-demo-files/raw/main/Vaillant/Eurostat_Heating_Degree_Days_1979-2024.xlsx" download>
+              <span class="file-icon xlsx">XLS</span><span class="file-name">Eurostat_Heating_Degree_Days_1979-2024.xlsx</span><span class="file-dl">↓</span>
+            </a>
+            <a class="file-tag" href="https://github.com/jenssgb/customer-demo-files/raw/main/Vaillant/Vaillant_Heat_Load_Catalog.xlsx" download>
+              <span class="file-icon xlsx">XLS</span><span class="file-name">Vaillant_Heat_Load_Catalog.xlsx</span><span class="file-dl">↓</span>
+            </a>
+            <a class="file-tag" href="https://github.com/jenssgb/customer-demo-files/raw/main/Vaillant/AI_Strategy_Brief_DRAFT.docx" download>
+              <span class="file-icon docx">DOC</span><span class="file-name">AI_Strategy_Brief_DRAFT.docx</span><span class="file-dl">↓</span>
+            </a>
+            <a class="file-tag" href="https://github.com/jenssgb/customer-demo-files/raw/main/Vaillant/Strategic_Context_Notes.txt" download>
+              <span class="file-icon txt">TXT</span><span class="file-name">Strategic_Context_Notes.txt</span><span class="file-dl">↓</span>
+            </a>
+            <a class="file-tag" href="https://github.com/jenssgb/customer-demo-files/raw/main/Vaillant/Workshop_Group_AI_Strategy_Outline.txt" download>
+              <span class="file-icon txt">TXT</span><span class="file-name">Workshop_Group_AI_Strategy_Outline.txt</span><span class="file-dl">↓</span>
+            </a>
+          </div>
+          <p style="margin:14px 0 6px 0; font-size:12px; color:var(--cp-text-muted);">Or download the whole bundle as one ZIP:</p>
+          <p style="margin:0;"><a href="https://github.com/jenssgb/customer-demo-files/archive/refs/heads/main.zip" style="font-size:13px;">&#128230; customer-demo-files-main.zip</a> <span style="font-size:11px;color:var(--cp-text-muted);">(full repo &mdash; the one-liner above only keeps the <code>Vaillant/</code> subfolder)</span></p>
+        </div>
+        <div class="card" data-block="ft">
+          <h3>Data discipline (read me first)</h3>
+          <ul>
+            <li>Both Eurostat workbooks = <strong>public official EU data</strong>, downloaded 27.05.2026 &mdash; unimpeachable in a room with industry insiders</li>
+            <li>The brand &times; country workbook is <strong>fictitious</strong> &mdash; brand and country names come from Vaillant Group's <em>public</em> website only</li>
+            <li>No interpretation of public Vaillant information beyond &ldquo;they make heating systems and serve Europe&rdquo;</li>
+            <li>If asked about the fictitious file: &ldquo;These are illustrative numbers I built to mirror the <em>shape</em> of data your team would actually use.&rdquo;</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- DEMO 4 removed: Project Lobster is internal, no public info -->
+
+    <!-- COPILOT STUDIO vs FOUNDRY -->
+    <section id="vsfoundry">
+      <div class="eyebrow">Positioning</div>
+      <h2>Copilot Studio vs Foundry &mdash; low-code or pro-code?</h2>
+      <p class="subtitle">
+        Both are Microsoft's official ways to <em>build</em> agents. They're not competing &mdash; they sit at different points on the build spectrum.
+        This is the chart that keeps the conversation clean when Vaillant asks where to invest the next AI engineer's time.
+      </p>
+
+      <div class="banner ft">
+        <span class="icon">🧭</span>
+        <div>
+          <h3>The mental model from Microsoft's own docs</h3>
+          <p>Microsoft positions <strong>Copilot Studio</strong> as the <strong>SaaS, low-code</strong> path for makers and business teams, and <strong>Foundry</strong> as the <strong>PaaS, pro-code</strong> path for AI engineers &mdash; with a third &ldquo;containers + GPUs&rdquo; option for fully custom IaaS work. Same Microsoft Cloud, same governance fabric. (Source: Cloud Adoption Framework, &ldquo;Technology plan for AI agents&rdquo;.)</p>
+        </div>
+      </div>
+
+      <div class="vs">
+        <div class="copilot">
+          <h3>Copilot Studio &mdash; the low-code workshop</h3>
+          <ul>
+            <li><strong>Platform type:</strong> SaaS (managed end-to-end by Microsoft)</li>
+            <li><strong>Who builds here:</strong> business analysts, makers, IT pros, citizen developers</li>
+            <li><strong>Authoring:</strong> natural-language &amp; drag-and-drop topics; visual conversation designer</li>
+            <li><strong>Connectors:</strong> 1,500+ prebuilt Power Platform connectors plug-and-play</li>
+            <li><strong>Models:</strong> built-in foundation models; can call Foundry-hosted models &amp; Azure AI Search</li>
+            <li><strong>Governance:</strong> Power Platform admin center, environments, DLP, ALM via Power Platform Pipelines</li>
+            <li><strong>Sweet spot:</strong> department-level &amp; line-of-business agents &mdash; IT help desk, HR FAQ, sales assistant, customer support triage</li>
+            <li><strong>Time-to-first-agent:</strong> hours to days</li>
+          </ul>
+        </div>
+        <div class="foundry">
+          <h3>Microsoft Foundry &mdash; the pro-code platform</h3>
+          <ul>
+            <li><strong>Platform type:</strong> PaaS (you own the architecture, Microsoft runs the substrate)</li>
+            <li><strong>Who builds here:</strong> AI engineers, data scientists, app developers</li>
+            <li><strong>Authoring:</strong> SDKs (Python, .NET, TypeScript), Foundry playground, agent definitions in code</li>
+            <li><strong>Connectors:</strong> Tool Catalog, MCP servers, OpenAPI specs, Azure Functions, Logic Apps</li>
+            <li><strong>Models:</strong> <em>any</em> model &mdash; OpenAI, Anthropic, Llama, Mistral, custom fine-tunes from the catalog</li>
+            <li><strong>Governance:</strong> Azure RBAC, private networking (standard setup), Azure Policy, full eval/monitoring loop</li>
+            <li><strong>Sweet spot:</strong> production-grade, mission-critical, multi-agent orchestration &mdash; clinical, claims, complex data reasoning, regulated workloads</li>
+            <li><strong>Time-to-first-agent:</strong> days to weeks (eval &amp; integration loop)</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3 style="margin-top:28px; font-size:21px;">When to pick which &mdash; a 1-question test</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:42%;">If this is true...</th>
+            <th>...build it in</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>A business team owns the use case end-to-end and can self-serve</td><td><strong style="color:var(--cp-multimodel);">Copilot Studio</strong></td></tr>
+          <tr><td>The agent mostly answers questions from documents and runs a few connector actions</td><td><strong style="color:var(--cp-multimodel);">Copilot Studio</strong></td></tr>
+          <tr><td>You need it live in Teams or on a website this month</td><td><strong style="color:var(--cp-multimodel);">Copilot Studio</strong></td></tr>
+          <tr><td>The data sits behind a Power Platform connector already</td><td><strong style="color:var(--cp-multimodel);">Copilot Studio</strong></td></tr>
+          <tr><td>You need to pick a specific foundation model (Anthropic, Llama, custom fine-tune)</td><td><strong style="color:var(--cp-cowork);">Foundry</strong></td></tr>
+          <tr><td>You need private networking, regulated workloads, isolation</td><td><strong style="color:var(--cp-cowork);">Foundry</strong></td></tr>
+          <tr><td>You're orchestrating multiple agents, complex tools, or long-running workflows in code</td><td><strong style="color:var(--cp-cowork);">Foundry</strong></td></tr>
+          <tr><td>You need a structured eval loop (datasets, metrics, continuous monitoring)</td><td><strong style="color:var(--cp-cowork);">Foundry</strong></td></tr>
+          <tr><td>You want the same agent embedded in your own product or SaaS surface</td><td><strong style="color:var(--cp-cowork);">Foundry</strong></td></tr>
+        </tbody>
+      </table>
+      <p class="source-note">
+        Sources: <a href="https://learn.microsoft.com/azure/cloud-adoption-framework/ai-agents/technology-solutions-plan-strategy#build-ai-agents" target="_blank" rel="noopener">Cloud Adoption Framework &mdash; Technology plan for AI agents</a> &middot;
+        <a href="https://learn.microsoft.com/microsoft-365/copilot/extensibility/declarative-agent-tool-comparison#copilot-studio" target="_blank" rel="noopener">Choose the right tool to build your declarative agent</a> &middot;
+        <a href="https://learn.microsoft.com/microsoft-copilot-studio/system-service-card-copilot-studio" target="_blank" rel="noopener">Copilot Studio service card</a> &middot;
+        <a href="https://learn.microsoft.com/microsoft-cloud/dev/copilot/isv/choosing-a-pro-code-pattern#build-a-custom-copilot" target="_blank" rel="noopener">Choosing the best pro-code pattern</a>.
+      </p>
+
+      <h3 style="margin-top:28px; font-size:21px;">The honest middle &mdash; you'll use both</h3>
+      <div class="grid two">
+        <div class="card" data-block="mm">
+          <h3>The hybrid pattern Microsoft documents</h3>
+          <p>Copilot Studio's <em>low-code interface</em> calling Foundry's <em>advanced models</em>. Business teams ship faster than full pro-code; they still get enterprise-grade reasoning. That's the documented &ldquo;reduces development time vs full pro-code, more customization than pure SaaS&rdquo; sweet spot.</p>
+        </div>
+        <div class="card" data-block="cw">
+          <h3>What this means for Vaillant</h3>
+          <ul>
+            <li>Don't pick a camp. Run both, with a clear handoff rule.</li>
+            <li>1st-mover use cases (HR, IT, support FAQs) &rarr; Copilot Studio</li>
+            <li>Use cases that touch product data, customer cases, regulatory text &rarr; Foundry</li>
+            <li>Both publish into Copilot Chat &mdash; the business user never sees the seam</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="banner ft" style="margin-top:18px;">
+        <span class="icon">🔗</span>
+        <div>
+          <h3>The bridge sentence for the room</h3>
+          <p>&ldquo;Copilot Studio is where your makers build agents in days. Foundry is where your engineers build agents that run the business. Both land in the same Copilot UI &mdash; that's not two strategies, that's one.&rdquo;</p>
+        </div>
+      </div>
+
+      <h3 style="margin-top:32px; font-size:21px;">The dev process matters &mdash; especially for live, customer-facing agents</h3>
+      <p>
+        If the agent runs in customer support, you need three versions of it living side-by-side: <strong>Production</strong> (always on, never touched directly), <strong>Test/UAT</strong> (the next release, business validates here), <strong>Development</strong> (where engineers and makers actually change things). Both platforms support that &mdash; the <em>how</em> is the part that defines what kind of team you need.
+      </p>
+
+      <div class="vs">
+        <div class="copilot">
+          <h3>Copilot Studio &mdash; ALM on Power Platform</h3>
+          <ul>
+            <li><strong>Environments:</strong> minimum 3 &mdash; Dev &amp; Test as <em>sandbox</em> environments, Production as a <em>production-type</em> environment, secured via Entra security groups</li>
+            <li><strong>Containers:</strong> <em>solutions</em> carry the agent + dependencies between environments; <em>environment variables</em> &amp; connection references swap settings/secrets per stage</li>
+            <li><strong>Source control:</strong> native <strong>Git integration</strong> (Azure DevOps repos, GA Nov 2024) &mdash; commits in YAML format, no command line needed</li>
+            <li><strong>Local dev:</strong> Copilot Studio <strong>VS Code extension</strong> &mdash; clone agent, edit locally, push back, optional &ldquo;reattach&rdquo; to a different environment</li>
+            <li><strong>CI/CD options:</strong> Power Platform Pipelines (low-code, hours to set up) &middot; GitHub Actions for Power Platform &middot; Azure DevOps with Power Platform Build Tools &middot; <a href="https://github.com/microsoft/copilot-alm-starter" target="_blank" rel="noopener">Copilot ALM Starter</a> (prebuilt GitHub Actions, PR validation, workload identity federation)</li>
+            <li><strong>Golden rules (from Microsoft docs):</strong> never customize in Test or Production, always work inside a solution, deploy as <em>managed</em>, use environment variables for secrets</li>
+            <li><strong>Who runs this loop:</strong> makers + a Power Platform admin + (for the advanced pattern) a DevOps engineer for the initial pipeline</li>
+          </ul>
+        </div>
+        <div class="foundry">
+          <h3>Foundry &mdash; ALM as code on Azure</h3>
+          <ul>
+            <li><strong>Environments:</strong> separate <strong>Foundry projects</strong> (or resource groups / subscriptions) per stage &mdash; full isolation, full Azure RBAC, private networking per stage</li>
+            <li><strong>Agent definition lives as code:</strong> <code>agent.yaml</code>, Python/.NET/TypeScript SDK, prompts &amp; tool configs in the repo &mdash; everything diffs in a normal pull request</li>
+            <li><strong>Source control:</strong> Git (GitHub or Azure DevOps) as the source of truth from day one &mdash; branches per feature, PR reviews, branch protection</li>
+            <li><strong>CI/CD:</strong> standard <strong>GitHub Actions</strong> or <strong>Azure Pipelines</strong> &middot; Bicep / <code>azd up</code> for infra &middot; container build &rarr; ACR push &rarr; hosted agent deploy &middot; eval gates on PR (regression testing against datasets) &middot; canary / blue-green rollout patterns</li>
+            <li><strong>Observability:</strong> Application Insights + Foundry tracing wired into the SDK &mdash; same telemetry stack engineers already use</li>
+            <li><strong>Who runs this loop:</strong> AI engineers / app developers / SRE &mdash; the team that already does CI/CD for production services</li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="source-note">
+        Sources:
+        <a href="https://learn.microsoft.com/microsoft-copilot-studio/guidance/alm" target="_blank" rel="noopener">Copilot Studio &mdash; Establish an ALM strategy</a> &middot;
+        <a href="https://learn.microsoft.com/power-platform/release-plan/2024wave2/power-apps/connect-environment-source-control" target="_blank" rel="noopener">Native Git integration for Power Platform</a> &middot;
+        <a href="https://learn.microsoft.com/microsoft-copilot-studio/visual-studio-code-extension-clone-agent" target="_blank" rel="noopener">Clone your Copilot Studio agent in VS Code</a> &middot;
+        <a href="https://learn.microsoft.com/power-platform/architecture/reference-architectures/enterprise-power-platform-alm" target="_blank" rel="noopener">Enterprise ALM reference architecture</a>.
+      </p>
+
+      <h3 style="margin-top:32px; font-size:21px;">Rate limits &amp; scale &mdash; where the platform pushes back</h3>
+      <p>
+        For a customer-service agent that handles real volume, throttling is not a footnote &mdash; it&rsquo;s a hard ceiling. Both platforms have limits; they sit in different places.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th style="width:34%;">Dimension</th>
+            <th style="width:33%;">Copilot Studio</th>
+            <th style="width:33%;">Foundry</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Message ceiling</strong></td>
+            <td>8,000 requests/min to a single agent <em>per Dataverse environment</em></td>
+            <td>No fixed agent-level ceiling &mdash; scales with model deployment quota</td>
+          </tr>
+          <tr>
+            <td><strong>Generative AI calls</strong></td>
+            <td>50&ndash;100 RPM &amp; 1,000&ndash;2,000 RPH per environment, depending on prepaid message packs (more packs = higher ceiling)</td>
+            <td>Tokens-per-minute (TPM) &amp; requests-per-minute (RPM) set per <em>model deployment</em>; you choose the size</td>
+          </tr>
+          <tr>
+            <td><strong>How you raise it</strong></td>
+            <td>Buy more capacity packs, switch to pay-as-you-go, or open a support ticket (PAYG only &mdash; not guaranteed)</td>
+            <td>Increase the deployment quota, deploy across more regions, or buy <strong>Provisioned Throughput Units (PTU)</strong> for guaranteed capacity</td>
+          </tr>
+          <tr>
+            <td><strong>Scope of the limit</strong></td>
+            <td>Per Dataverse environment &mdash; one chatty agent can starve others sharing the env</td>
+            <td>Per model deployment &mdash; isolation by design</td>
+          </tr>
+          <tr>
+            <td><strong>Billing model</strong></td>
+            <td>Copilot Credits (per message/action) or capacity packs</td>
+            <td>Per token (PAYG) or per PTU per hour (reserved)</td>
+          </tr>
+          <tr>
+            <td><strong>What happens at the limit</strong></td>
+            <td>End user sees &ldquo;agent currently unavailable&rdquo; or &ldquo;usage limit reached&rdquo;</td>
+            <td>HTTP 429 to the calling code &mdash; your app decides how to handle it (retry, queue, fallback model)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="source-note">
+        Sources:
+        <a href="https://learn.microsoft.com/microsoft-copilot-studio/requirements-quotas" target="_blank" rel="noopener">Copilot Studio quotas and limits</a> &middot;
+        <a href="https://learn.microsoft.com/troubleshoot/power-platform/copilot-studio/licensing/throttling-errors-agents" target="_blank" rel="noopener">Resolve throttling errors in agents</a> &middot;
+        <a href="https://learn.microsoft.com/azure/ai-foundry/concepts/quotas-limits" target="_blank" rel="noopener">Azure AI Foundry quotas and limits</a> &middot;
+        <a href="https://learn.microsoft.com/azure/ai-foundry/openai/concepts/provisioned-throughput" target="_blank" rel="noopener">Provisioned Throughput Units (PTU)</a>.
+      </p>
+
+      <div class="banner cw" style="margin-top:18px;">
+        <span class="icon">🚦</span>
+        <div>
+          <h3>The honest implication for customer-facing workloads</h3>
+          <p>If the agent answers questions inside the company at normal office volume &mdash; Copilot Studio absorbs that comfortably. If the agent is on the front line of customer service at peak hours &mdash; campaign weekend, product launch, a regulatory headline &mdash; you eventually hit Copilot Studio&rsquo;s per-environment ceiling and have nowhere to go but support tickets and more packs. That&rsquo;s the moment the pro-code path on Foundry pays for itself: deployment-level quotas you control, PTU for guaranteed throughput, multi-region failover, and an HTTP 429 your code can actually <em>react to</em> instead of a generic error in the user&rsquo;s chat window.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- LIKELY Q&A -->
+    <section id="qa">
+      <div class="eyebrow">Bring-into-your-pocket</div>
+      <h2>Questions they will probably ask</h2>
+
+      <div class="grid two">
+        <div class="card">
+          <h3>&ldquo;We already built Vaillant GPT &mdash; what's left?&rdquo;</h3>
+          <p>Vaillant GPT is the engine in one room. Copilot is the building that connects every room &mdash; Outlook, Word, Excel, Teams &mdash; with audit, identity, file context. The GPT becomes one of the agents people <em>call</em>, not the only door.</p>
+        </div>
+        <div class="card">
+          <h3>&ldquo;How do we govern this? Purview, DLP, BR?&rdquo;</h3>
+          <p>Enterprise Data Protection on by default. Purview audit logs every interaction. DLP labels block sensitive content from leaving. Conditional Access via Entra. Tell them: &ldquo;Many German enterprises have already cleared this with their works councils &mdash; we'll bring the deck.&rdquo;</p>
+        </div>
+        <div class="card">
+          <h3>&ldquo;Models change every month &mdash; aren't we chasing a moving target?&rdquo;</h3>
+          <p>Yes &mdash; and that's why model choice is part of the platform, not part of your code. You pick the model per task. Microsoft handles version updates, deprecations, evaluations. You focus on use cases.</p>
+        </div>
+        <div class="card">
+          <h3>&ldquo;What's the smallest first step after the summer?&rdquo;</h3>
+          <p>A 6-week pilot: 25-50 licensed business users, 3 named use cases, weekly success metrics. Pair it with one Copilot Studio agent that uses Vaillant data. End with a steering-committee report that decides scale-out.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+  // Theme toggle
+  document.getElementById("theme").addEventListener("click", () => {
+    const current = document.documentElement.getAttribute("data-theme");
+    document.documentElement.setAttribute("data-theme", current === "dark" ? "light" : "dark");
+  });
+
+  // Copy prompts
+  document.querySelectorAll(".copy").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const block = button.closest(".prompt-card, section").querySelector("pre");
+      if (!block) return;
+      await navigator.clipboard.writeText(block.textContent);
+      const original = button.textContent;
+      button.textContent = "Copied";
+      setTimeout(() => { button.textContent = original; }, 1200);
+    });
+  });
+</script>
+</body>
+</html>
